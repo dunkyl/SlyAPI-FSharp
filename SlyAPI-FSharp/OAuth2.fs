@@ -173,8 +173,6 @@ type private PendingGrant = {
     BeganAt: DateTime
 }
 
-type OAuth2Wizard = OAuthWizard<OAuth2User>
-   
 /// Mangages the steps for granting user tokens for an app
 type PkceOAuth2Wizard (app: OAuth2App, ?client: HttpClient) =
 
@@ -217,16 +215,14 @@ type PkceOAuth2Wizard (app: OAuth2App, ?client: HttpClient) =
         else 
             failwith "Grant not found or invalid"
     
-    interface OAuth2Wizard with
-        
-        member this.Step1 state redirect scopes =
-            let authUrl, codeVerifier, stateChallenge =
-                app.AuthUrlWithPkce(redirect, state, scopes)
-            this.PushUnverified(stateChallenge, codeVerifier, scopes, redirect)
-            authUrl
+    member this.Step1 state redirect scopes =
+        let authUrl, codeVerifier, stateChallenge =
+            app.AuthUrlWithPkce(redirect, state, scopes)
+        this.PushUnverified(stateChallenge, codeVerifier, scopes, redirect)
+        authUrl
 
-        member this.Step3 state code =
-            let grant = this.PopVerified(state)
-            app.ExchangeCodeWithPkce client code grant.CodeVerifier grant.Scopes grant.Redirect
+    member this.Step3 state code =
+        let grant = this.PopVerified(state)
+        app.ExchangeCodeWithPkce client code grant.CodeVerifier grant.Scopes grant.Redirect
             
             

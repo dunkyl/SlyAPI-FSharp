@@ -9,7 +9,6 @@
   <ItemGroup>
     <Compile Include="Auth.fs" />
     <Compile Include="WebAPI.fs" />
-	<Compile Include="OAuth.fs" />
     <Compile Include="OAuth2.fs" />
     <Compile Include="Atrributes.fs" />
   </ItemGroup>
