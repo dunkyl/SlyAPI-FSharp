@@ -11,11 +11,12 @@
     <Description>Base library for use in other web API libraries</Description>
     <PackageProjectUrl>https://github.com/dunkyl/SlyAPI-FSharp</PackageProjectUrl>
     <RepositoryUrl>https://github.com/dunkyl/SlyAPI-FSharp</RepositoryUrl>
-    <PackageReleaseNotes>Initial Repease</PackageReleaseNotes>
+    <PackageReleaseNotes>Initial Release</PackageReleaseNotes>
     <AssemblyVersion>0.0.1.0</AssemblyVersion>
     <FileVersion>0.0.1.0</FileVersion>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageIcon>sly logo f#.png</PackageIcon>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
 
   <ItemGroup>
@@ -29,6 +30,10 @@
 
   <ItemGroup>
     <None Include="..\..\SlyMeta\sly logo f#.png">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+    <None Include="..\README.md">
       <Pack>True</Pack>
       <PackagePath>\</PackagePath>
     </None>
