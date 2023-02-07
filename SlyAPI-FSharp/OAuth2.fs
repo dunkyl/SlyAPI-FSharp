@@ -34,6 +34,7 @@ module Tokens =
         |> SHA256.Create().ComputeHash
         |> urlSafeEncode64
 
+/// Authorized user grant
 type OAuth2User = {
     Token: string
     RefreshToken: string
@@ -44,6 +45,7 @@ type OAuth2User = {
 
 open Tokens
 
+/// Project credentials for creating user tokens
 type OAuth2App = {
     Id: string
     Secret: string
@@ -123,9 +125,11 @@ type OAuth2App = {
             return failwith $"Failed to refresh token: {response.StatusCode}"
     }
 
-/// Authorized user grant
+    member this.WithUser (user: OAuth2User) = OAuth2 (this, user)
+
+/// App with authorized user.
 /// Automatically refreshes the token if it expires
-type OAuth2 (app: OAuth2App, user: OAuth2User, ?userRefreshCallback: Action<OAuth2User>) =
+and OAuth2 (app: OAuth2App, user: OAuth2User, ?userRefreshCallback: Action<OAuth2User>) =
 
     let mutable refreshTask: Task option = None
     
@@ -215,12 +219,15 @@ type PkceOAuth2Wizard (app: OAuth2App, ?client: HttpClient) =
         else 
             failwith "Grant not found or invalid"
     
+    /// Generate a URL on a third party website.
+    /// User is redirect to this by 1st party
     member this.Step1 state redirect scopes =
         let authUrl, codeVerifier, stateChallenge =
             app.AuthUrlWithPkce(redirect, state, scopes)
         this.PushUnverified(stateChallenge, codeVerifier, scopes, redirect)
         authUrl
 
+    /// Exchange a code from a user who was redirected back for a grant 
     member this.Step3 state code =
         let grant = this.PopVerified(state)
         app.ExchangeCodeWithPkce client code grant.CodeVerifier grant.Scopes grant.Redirect

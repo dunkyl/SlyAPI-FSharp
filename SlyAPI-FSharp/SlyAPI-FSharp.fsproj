@@ -2,15 +2,36 @@
 
   <PropertyGroup>
     <TargetFramework>net7.0</TargetFramework>
-    <RootNamespace>SlyAPI_FSharp</RootNamespace>
+    <RootNamespace>net.dunkyl.SlyAPI</RootNamespace>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <PackageId>net.dunkyl.SlyAPI</PackageId>
+    <Title>SlyAPI for F#</Title>
+    <Authors>dunkyl</Authors>
+    <Description>Base library for use in other web API libraries</Description>
+    <PackageProjectUrl>https://github.com/dunkyl/SlyAPI-FSharp</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/dunkyl/SlyAPI-FSharp</RepositoryUrl>
+    <PackageReleaseNotes>Initial Repease</PackageReleaseNotes>
+    <AssemblyVersion>0.0.1.0</AssemblyVersion>
+    <FileVersion>0.0.1.0</FileVersion>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageIcon>sly logo f#.png</PackageIcon>
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="Atrributes.fs" />
+    <Compile Include="Serialization.fs" />
+    <Compile Include="UrlQuery.fs" />
     <Compile Include="Auth.fs" />
     <Compile Include="WebAPI.fs" />
     <Compile Include="OAuth2.fs" />
-    <Compile Include="Atrributes.fs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\SlyMeta\sly logo f#.png">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
   </ItemGroup>
 
 </Project>
