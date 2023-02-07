@@ -376,3 +376,5 @@ FodyWeavers.xsd
 /tmp/watch/reference/net-dunkyl-slyapi-webapi.html
 /tmp/watch/reference/net-dunkyl-slyapi.html
 /tmp/watch/index.json
+/SlyAPI-FSharp.Tests/apikey.txt
+/.fsdocs/cache
