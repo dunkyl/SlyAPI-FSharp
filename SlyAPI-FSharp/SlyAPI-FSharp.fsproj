@@ -12,11 +12,10 @@
     <PackageProjectUrl>https://github.com/dunkyl/SlyAPI-FSharp</PackageProjectUrl>
     <RepositoryUrl>https://github.com/dunkyl/SlyAPI-FSharp</RepositoryUrl>
     <PackageReleaseNotes>Initial Release</PackageReleaseNotes>
-    <AssemblyVersion>0.0.1.0</AssemblyVersion>
-    <FileVersion>0.0.1.0</FileVersion>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageIcon>sly logo f#.png</PackageIcon>
     <PackageReadmeFile>README.md</PackageReadmeFile>
+    <Version>$(VersionPrefix)0.0.3</Version>
   </PropertyGroup>
 
   <ItemGroup>
