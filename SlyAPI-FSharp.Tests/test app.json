@@ -1,0 +1,6 @@
+﻿{
+    "id": "2763-test.project.id",
+    "auth_url": "https://accounts.example.com/o/oauth2/auth",
+    "token_url": "https://oauth2.example.com/token",
+    "secret": "test-example-client-secret"
+}

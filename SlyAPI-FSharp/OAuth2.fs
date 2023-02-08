@@ -152,11 +152,11 @@ and OAuth2 (app: OAuth2App, user: OAuth2User, ?userRefreshCallback: Action<OAuth
         let app = 
             appFile
             |> File.ReadAllText
-            |> JsonSerializer.Deserialize<_>
+            |> JsonSerializer.Deserialize<OAuth2App>
         let user = 
             userFile
             |> File.ReadAllText
-            |> JsonSerializer.Deserialize<_>
+            |> JsonSerializer.Deserialize<OAuth2User>
         OAuth2 (app, user)
         
     member val User = user with get, set
