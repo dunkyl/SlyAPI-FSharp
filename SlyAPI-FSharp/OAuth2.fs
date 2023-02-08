@@ -49,8 +49,8 @@ open Tokens
 type OAuth2App = {
     Id: string
     Secret: string
-    AuthUrl: string
-    TokenUrl: string
+    AuthUri: string
+    TokenUri: string
 } with
     
     member this.AuthUrlWithPkce(redirectUrl: Uri, state: string, scopes: string Set) =
@@ -72,7 +72,7 @@ type OAuth2App = {
                k + "=" + Uri.EscapeDataString(v)
             ) params'
         let query = String.Join('&', queries)
-        Uri $"{this.AuthUrl}?{query}", codeVerifier, stateChallenge
+        Uri $"{this.AuthUri}?{query}", codeVerifier, stateChallenge
 
 
     member this.ExchangeCodeWithPkce (client: HttpClient) code codeVerifier (scopes: string Set) (redirect: Uri) = task {
@@ -86,7 +86,7 @@ type OAuth2App = {
             "client_secret", this.Secret
             "redirect_uri",  redirect.ToString()
         |])
-        let request = new HttpRequestMessage(HttpMethod.Post, this.TokenUrl, Content = content)
+        let request = new HttpRequestMessage(HttpMethod.Post, this.TokenUri, Content = content)
         request.Headers.Add("Authorization", "Basic " + Convert.ToBase64String(Encoding.UTF8.GetBytes(this.Id + ":" + this.Secret)))
         let! response = client.SendAsync(request)
         let! text = response.Content.ReadAsStringAsync()
@@ -113,7 +113,7 @@ type OAuth2App = {
             "client_id", this.Id
             "client_secret", this.Secret
         |])
-        let! response = client.PostAsync(this.TokenUrl, content)
+        let! response = client.PostAsync(this.TokenUri, content)
         let! text = response.Content.ReadAsStringAsync()
         if response.IsSuccessStatusCode then
             let tokenResponse = JsonSerializer.Deserialize<
@@ -135,7 +135,7 @@ and OAuth2 (app: OAuth2App, user: OAuth2User, ?userRefreshCallback: Action<OAuth
     
     interface Auth with
         member this.Sign(request: HttpRequestMessage, client: HttpClient) = task {
-            if user.Expires < DateTime.Now then
+            if this.User.Expires < DateTime.Now then
                 match refreshTask with
                 | Some(task) ->
                     do! task // TODO: check that this doesn't run it twice
@@ -144,22 +144,30 @@ and OAuth2 (app: OAuth2App, user: OAuth2User, ?userRefreshCallback: Action<OAuth
                     refreshTask <- Some(task)
                     do! task
                 refreshTask <- None
-            request.Headers.Add("Authorization", $"{user.TokenType} {user.Token}")
+            request.Headers.Add("Authorization", $"{this.User.TokenType} {this.User.Token}")
             return request
         }
         
+    /// Load the app and user from JSON files
+    /// When the user is refreshed, it will be rewritten to the user file
     new(appFile: string, userFile: string) =
-        let app = 
-            appFile
-            |> File.ReadAllText
-            |> JsonSerializer.Deserialize<OAuth2App>
-        let user = 
-            userFile
-            |> File.ReadAllText
-            |> JsonSerializer.Deserialize<OAuth2User>
-        OAuth2 (app, user)
+        let jsonOptions = JsonSerializerOptions(
+            PropertyNamingPolicy = Serialization.SnakeCaseNamingPolicy ()
+        )
+        let app = JsonSerializer.Deserialize<OAuth2App>(
+            File.ReadAllText appFile,
+            jsonOptions)
+        let user = JsonSerializer.Deserialize<OAuth2User>(
+            File.ReadAllText userFile,
+            jsonOptions)
+        let writeUser user =
+            let json = JsonSerializer.Serialize<OAuth2User>(user, jsonOptions)
+            File.WriteAllText(userFile, json)
+            
+        OAuth2 (app, user, writeUser)
         
     member val User = user with get, set
+    member val App = app with get
 
     member private this.Refresh(client: HttpClient) = task {
         let! newUser = app.Refresh client user

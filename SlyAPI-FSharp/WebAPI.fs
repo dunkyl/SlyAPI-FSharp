@@ -55,7 +55,7 @@ type [<AbstractClass>] WebAPI (auth: Auth) =
     /// Options used for all serialization and deserialization of API calls
     member _.JsonOptions =
         let opts = JsonSerializerOptions(
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            PropertyNamingPolicy = Serialization.SnakeCaseNamingPolicy(),
             NumberHandling = Serialization.JsonNumberHandling.AllowReadingFromString
             )
         opts.Converters.Add(Serialization.EnumUnionJsonConverter())
@@ -74,12 +74,13 @@ type [<AbstractClass>] WebAPI (auth: Auth) =
 
     /// Serialized call with no deserializtion
     member this.SerializedCall method (path: string) (input: 'In): HttpResponseMessage Call = 
+        let uri = Uri(this.BaseURL, path)
         let req =
             match input :> obj with
-            | :? unit -> new HttpRequestMessage(method, Uri(this.BaseURL, path))
+            | :? unit -> new HttpRequestMessage(method, uri)
             | _ ->
                 let content = Json.JsonContent.Create<_>(input, options = this.JsonOptions)
-                new HttpRequestMessage(method, Uri(this.BaseURL, path), Content = content)
+                new HttpRequestMessage(method, uri, Content = content)
         this.RawRequest req
     
     /// Serialized call, deserialize response

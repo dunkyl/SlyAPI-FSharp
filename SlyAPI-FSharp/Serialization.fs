@@ -1,8 +1,10 @@
 module net.dunkyl.SlyAPI.Serialization
 
+open System
 open FSharp.Reflection
 open System.Text.Json
 open System.Text.Json.Serialization
+open System.Text
 
 let isEnumUnion value =
     let ty = value.GetType()
@@ -49,3 +51,21 @@ let (|EnumUnion|_|) (u: obj) =
         Some (getUnionName u)
     else
         None
+
+type SnakeCaseNamingPolicy () =
+    inherit JsonNamingPolicy()
+    override _.ConvertName name =
+        let mutable charsIter = name.GetEnumerator()
+        if not(charsIter.MoveNext()) then
+            name
+        else
+        let sb = new StringBuilder()
+        sb.Append(Char.ToLower(charsIter.Current)) |> ignore
+        while charsIter.MoveNext() do
+            if Char.IsUpper(charsIter.Current) then
+                sb
+                    .Append('_')
+                    .Append(Char.ToLower(charsIter.Current)) |> ignore
+            else
+                sb.Append(charsIter.Current) |> ignore
+        sb.ToString()
