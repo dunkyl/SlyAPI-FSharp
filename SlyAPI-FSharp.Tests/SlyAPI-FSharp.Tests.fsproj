@@ -32,7 +32,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\SlyAPI-FSharp\SlyAPI-FSharp.fsproj" />
+    <ProjectReference Include="..\SlyAPI-FSharp.fsproj" />
   </ItemGroup>
 
 </Project>

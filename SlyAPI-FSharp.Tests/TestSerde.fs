@@ -17,8 +17,8 @@ type TestSerde () =
 
         Assert.IsNotNull auth.App.Id
         Assert.IsNotNull auth.App.Secret
-        Assert.IsNotNull auth.App.AuthUrl
-        Assert.IsNotNull auth.App.TokenUrl
+        Assert.IsNotNull auth.App.AuthUri
+        Assert.IsNotNull auth.App.TokenUri
         
         Assert.IsNotNull auth.User.Expires
         Assert.IsNotNull auth.User.RefreshToken
