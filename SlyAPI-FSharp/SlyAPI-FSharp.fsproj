@@ -11,7 +11,7 @@
     <Description>Base library for use in other web API libraries</Description>
     <PackageProjectUrl>https://github.com/dunkyl/SlyAPI-FSharp</PackageProjectUrl>
     <RepositoryUrl>https://github.com/dunkyl/SlyAPI-FSharp</RepositoryUrl>
-    <PackageReleaseNotes>Fix for OAuth2 file loading</PackageReleaseNotes>
+    <PackageReleaseNotes>Add and use SnakeCaseNamingPolicy</PackageReleaseNotes>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageIcon>sly logo f#.png</PackageIcon>
     <PackageReadmeFile>README.md</PackageReadmeFile>

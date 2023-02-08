@@ -11,6 +11,7 @@
 ### Fixed
 
 - OAuth2 and WebAPI use SnakeCaseNamingPolicy
+- OAuth2App member names "Uri" instead of "Url"
 
 ## [0.0.4] - 2023-02-07
 
