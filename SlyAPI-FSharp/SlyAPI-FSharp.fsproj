@@ -11,11 +11,11 @@
     <Description>Base library for use in other web API libraries</Description>
     <PackageProjectUrl>https://github.com/dunkyl/SlyAPI-FSharp</PackageProjectUrl>
     <RepositoryUrl>https://github.com/dunkyl/SlyAPI-FSharp</RepositoryUrl>
-    <PackageReleaseNotes>Initial Release</PackageReleaseNotes>
+    <PackageReleaseNotes>Fix for OAuth2 file loading</PackageReleaseNotes>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageIcon>sly logo f#.png</PackageIcon>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <Version>$(VersionPrefix)0.0.3</Version>
+    <Version>$(VersionPrefix)0.0.4</Version>
   </PropertyGroup>
 
   <ItemGroup>
