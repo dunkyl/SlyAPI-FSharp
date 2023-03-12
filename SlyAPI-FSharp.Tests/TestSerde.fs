@@ -21,7 +21,18 @@ type TestSerde () =
         Assert.IsNotNull auth.App.TokenUri
         
         Assert.IsNotNull auth.User.Expires
+        Assert.IsTrue (auth.User.Expires > DateTime(2000, 1, 1))
         Assert.IsNotNull auth.User.RefreshToken
         Assert.IsNotNull auth.User.Scopes
         Assert.IsNotNull auth.User.Token
         Assert.IsNotNull auth.User.TokenType
+
+    [<TestMethod>]
+    member _.TestServiceAccountFromFile () =
+        let sa = ServiceAccounts.ServiceAccount("test service account.json")
+
+        Assert.IsNotNull sa.AuthUri
+        Assert.IsNotNull sa.ClientEmail
+        Assert.IsNotNull sa.PrivateKey
+        Assert.IsNotNull sa.AuthUri
+        Assert.IsNotNull sa.TokenUri

@@ -8,31 +8,7 @@ open System.Text.Json
 open System.Threading.Tasks
 open System.IO
 
-/// Generating and processing tokens for OAuth2
-module Tokens =
-
-    let private rng = RandomNumberGenerator.Create()
-
-    /// Base-64 encoding with the url safe digit set
-    /// https://www.rfc-editor.org/rfc/rfc4648#section-5
-    let urlSafeEncode64 bytes =
-        Convert.ToBase64String(bytes).TrimEnd('=').Replace('+', '-').Replace('/', '_')
-
-    /// Make a new string token of the length
-    /// For OAuth2 PKCE, the number of bytes is at least 32 (43 digits)
-    /// and at most 96 (128 digits)
-    /// https://www.rfc-editor.org/rfc/rfc7636#section-4.1
-    let tokenUrlSafe length =
-        let bytes = Array.zeroCreate<byte> length
-        rng.GetBytes(bytes)
-        urlSafeEncode64 bytes
-    
-    /// Url-safe-base-64-encoded hash of a token
-    let sha256ofToken (token: string) =
-        token
-        |> Encoding.UTF8.GetBytes
-        |> SHA256.Create().ComputeHash
-        |> urlSafeEncode64
+open Tokens
 
 /// Authorized user grant
 type OAuth2User = {
@@ -42,8 +18,6 @@ type OAuth2User = {
     TokenType: string
     Scopes: string Set
 }
-
-open Tokens
 
 /// Project credentials for creating user tokens
 type OAuth2App = {
@@ -113,39 +87,38 @@ type OAuth2App = {
             "client_id", this.Id
             "client_secret", this.Secret
         |])
-        let! response = client.PostAsync(this.TokenUri, content)
-        let! text = response.Content.ReadAsStringAsync()
-        if response.IsSuccessStatusCode then
+        return! client.PostAsync(this.TokenUri, content)
+        |> Call.mapResponse (fun r -> task {
+            let! text = r.Content.ReadAsStringAsync()
             let tokenResponse = JsonSerializer.Deserialize<
                 {| access_token: string; expires_in: int |}> text
             let newExpiry = DateTime.Now + TimeSpan(0, 0, tokenResponse.expires_in)
             return { user with Token = tokenResponse.access_token; Expires = newExpiry}
-        else
-            Diagnostics.Debug.WriteLine $"{text}"
-            return failwith $"Failed to refresh token: {response.StatusCode}"
+        })
     }
 
     member this.WithUser (user: OAuth2User) = OAuth2 (this, user)
 
 /// App with authorized user.
 /// Automatically refreshes the token if it expires
-and OAuth2 (app: OAuth2App, user: OAuth2User, ?userRefreshCallback: Action<OAuth2User>) =
+and OAuth2 (app: OAuth2App, user: OAuth2User, ?onRefresh: Action<OAuth2User>) =
 
-    let mutable refreshTask: Task option = None
+    let is_refreshing = new Threading.SemaphoreSlim(0, 1)
     
-    interface Auth with
+    interface IOAuth2 with
         member this.Sign(request: HttpRequestMessage, client: HttpClient) = task {
-            if this.User.Expires < DateTime.Now then
-                match refreshTask with
-                | Some(task) ->
-                    do! task // TODO: check that this doesn't run it twice
-                | None ->
-                    let task = this.Refresh(client)
-                    refreshTask <- Some(task)
-                    do! task
-                refreshTask <- None
-            request.Headers.Add("Authorization", $"{this.User.TokenType} {this.User.Token}")
-            return request
+            do! is_refreshing.WaitAsync()
+            let! refresh = 
+                if this.User.Expires < DateTime.Now then
+                    this.Refresh(client)
+                else
+                    Task.FromResult (Ok ())
+            is_refreshing.Release() |> ignore
+            match refresh with
+            | Ok () ->
+                request.Headers.Add("Authorization", $"{this.User.TokenType} {this.User.Token}")
+                return Ok request
+            | Error e -> return Error e
         }
         
     /// Load the app and user from JSON files
@@ -169,12 +142,15 @@ and OAuth2 (app: OAuth2App, user: OAuth2User, ?userRefreshCallback: Action<OAuth
     member val User = user with get, set
     member val App = app with get
 
-    member private this.Refresh(client: HttpClient) = task {
-        let! newUser = app.Refresh client user
-        this.User <- newUser
-        match userRefreshCallback with
-        | Some(fn) -> fn.Invoke(newUser)
-        | None -> ()
+    member private this.Refresh(client: HttpClient): unit Call = task {
+        match! app.Refresh client user with
+        | Ok newUser ->
+            this.User <- newUser
+            match onRefresh with
+            | Some(fn) -> fn.Invoke(this.User)
+            | None -> ()
+            return Ok ()
+        | Error e -> return Error e
     }
 
 type private PendingGrant = {

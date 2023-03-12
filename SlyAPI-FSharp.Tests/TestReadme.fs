@@ -44,7 +44,7 @@ type TestReadme () =
         | Ok city ->
             printfn $"{city}"
             Assert.AreEqual ("London", city.Name)
-        | Error (code, message) ->
-            let text' = message.Content.ReadAsStringAsync()
+        | Error response ->
+            let text' = response.Content.ReadAsStringAsync()
             Task.WaitAll text'
-            Assert.Fail(sprintf "Error %s: %s" (code.ToString()) text'.Result)
+            Assert.Fail(sprintf "Error %s: %s" (response.StatusCode.ToString()) text'.Result)

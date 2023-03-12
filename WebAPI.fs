@@ -3,26 +3,6 @@
 open System
 open System.Net.Http
 open System.Text.Json
-open System.Threading.Tasks
-
-/// Shorthand for a async api call
-type Call<'T> = Task<Result<'T, Net.HttpStatusCode * HttpResponseMessage>>
-
-module Call =
-    let map (fn: 'T -> 'U) (call: Call<'T>): Call<'U> = task {
-        let! result = call
-        return result |> Result.map fn
-    }
-
-    let mapTask (fn: 'T -> Task<'U>) (call: Call<'T>): Call<'U> = task {
-        let! result = call
-        match result with
-        | Ok x ->
-            let! result2 = fn x
-            return Ok result2
-        | Error err ->
-            return Error err
-    }
 
 [<AutoOpen>]
 module Extensions =
@@ -31,26 +11,26 @@ module Extensions =
 
     /// Not raised by any internal source, but used to convert to exception-style
     /// error handling from `FSharp.Core.Result` with the `Unwrap()` extension method.
-    exception APIException of Net.HttpStatusCode * HttpResponseMessage
+    exception APIException of HttpResponseMessage
 
     /// Returns the Ok value, or raises the error value as an `APIException`.
     [<Extension>]
     type ResultUnwrapExtension () =
         [<Extension>]
-        static member inline Unwrap(this: Result<'T, Net.HttpStatusCode * HttpResponseMessage>) =
+        static member inline Unwrap(this: Result<'T, HttpResponseMessage>) =
             match this with
             | Ok x -> x
             | Error e -> raise (APIException e)
 
 /// Base class for API implentations.
 /// Handles authorization, serialization, and requests.
-type [<AbstractClass>] WebAPI (auth: Auth) =
+type [<AbstractClass>] WebAPI (auth: IAuth) =
     
     let client = new HttpClient()
     
     abstract member BaseURL: Uri
     abstract member UserAgent: string
-    default _.UserAgent = $"SlyAPI-FSharp/0.0.1"
+    default _.UserAgent = $"SlyAPI-FSharp/0.0.6"
     
     /// Options used for all serialization and deserialization of API calls
     member _.JsonOptions =
@@ -65,11 +45,15 @@ type [<AbstractClass>] WebAPI (auth: Auth) =
     member this.RawRequest (request: HttpRequestMessage): Call<HttpResponseMessage> = task {
         request.Headers.Add("User-Agent", this.UserAgent)
         let! signedRequest = auth.Sign(request, client)
-        let! result = client.SendAsync(signedRequest)
-        if result.IsSuccessStatusCode then
-            return Ok(result)
-        else
-            return Error(result.StatusCode, result)
+        match signedRequest with
+        | Ok req ->
+            let! result = client.SendAsync req
+            if result.IsSuccessStatusCode then
+                return Ok result
+            else
+                return Error result
+        | Error e -> return Error e
+        // ^ note: result type differs from inner result (success as request/response)
     }
 
     /// Serialized call with no deserializtion
@@ -94,11 +78,11 @@ type [<AbstractClass>] WebAPI (auth: Auth) =
             | Net.HttpStatusCode.OK ->
                 let! json = data.Content.ReadAsStringAsync()
                 return Ok (JsonSerializer.Deserialize<_>(json, this.JsonOptions))
-            | Net.HttpStatusCode.NoContent ->
+            | Net.HttpStatusCode.NoContent when typeof<'Out> = typeof<unit> ->
                 return Ok Unchecked.defaultof<'Out>
             | other ->
                 Diagnostics.Debug.WriteLine($"Unexpected success error code: {other}")
-                return Error (other, data)
+                return Error data
         | Error err ->
             return Error err
     }
@@ -106,7 +90,7 @@ type [<AbstractClass>] WebAPI (auth: Auth) =
     /// Serialized GET, deserialize response
     member this.Get path (input: 'In): 'Out Call = this.Call HttpMethod.Get path input
     
-    /// Serialized GET, deserialize response
+    /// Serialized GET, text response
     member this.GetString path (input: 'In): string Call =
         Call.mapTask
             (fun (res: HttpResponseMessage) -> res.Content.ReadAsStringAsync())

@@ -15,16 +15,20 @@
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageIcon>sly logo f#.png</PackageIcon>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <Version>$(VersionPrefix)0.0.5</Version>
+    <Version>$(VersionPrefix)0.0.8</Version>
     <PackageOutputPath>.</PackageOutputPath>
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="Tokens.fs" />
+    <Compile Include="Jwt.fs" />
     <Compile Include="Atrributes.fs" />
     <Compile Include="Serialization.fs" />
     <Compile Include="UrlQuery.fs" />
+    <Compile Include="Web.fs" />
     <Compile Include="Auth.fs" />
     <Compile Include="WebAPI.fs" />
+    <Compile Include="OAuth2Service.fs" />
     <Compile Include="OAuth2.fs" />
   </ItemGroup>
 
@@ -37,6 +41,7 @@
       <Pack>True</Pack>
       <PackagePath>\</PackagePath>
     </None>
+	<None Include="CHANGELOG.md" />
   </ItemGroup>
 
 </Project>

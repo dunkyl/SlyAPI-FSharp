@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "SlyAPI-FSharp.Cli": {
+      "commandName": "Project",
+      "commandLineArgs": "service-grant \"../../../../../htwinscentr.al/service account.json\" https://www.googleapis.com/auth/drive.readonly"
+    }
+  }
+}
