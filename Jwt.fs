@@ -1,4 +1,4 @@
-﻿/// IMplementation for generating JWT tokens for Google web service accounts
+﻿/// Implementation for generating JWT tokens for Google web service accounts
 module net.dunkyl.SlyAPI.Jwt
 
 open System.Security.Cryptography
